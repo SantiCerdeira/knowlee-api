@@ -46,17 +46,31 @@ app.use("/", commentsRouter);
 app.use("/", usersRouter);
 app.use("/", chatRouter);
 
-app.listen(4321);
+// app.listen(4321);
 
-// SOCKET.IO
-io.on('connection', (socket) => {
-  socket.on('message', (message) => {
-    io.emit('message', message);
-  });
+// // SOCKET.IO
+// io.on('connection', (socket) => {
+//   socket.on('message', (message) => {
+//     io.emit('message', message);
+//   });
 
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
+//   socket.on('disconnect', () => {
+//     console.log('user disconnected');
+//   });
+// });
+
+// server.listen(4322)
+
+server.listen(4321, () => {
+  console.log('HTTP server listening on port 4321');
+  // SOCKET.IO
+  io.on('connection', (socket) => {
+    socket.on('message', (message) => {
+      io.emit('message', message);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('user disconnected');
+    });
   });
 });
-
-server.listen(4322)
