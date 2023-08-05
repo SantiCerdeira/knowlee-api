@@ -1,21 +1,14 @@
 import multer from "multer";
 import { fileURLToPath } from "url";
 import path from "path";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import s3Client from "../services/s3Client.js";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const storage = multer.memoryStorage();
 const fileUpload = multer({ storage }).single("file");
-
-const s3Client = new S3Client({
-  region: process.env.AWS_BUCKET_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_PUBLIC_KEY,
-    secretAccessKey: process.env.AWS_SECRET_KEY,
-  },
-});
 
 const pdfUpload = async (req, res, next) => {
   try {

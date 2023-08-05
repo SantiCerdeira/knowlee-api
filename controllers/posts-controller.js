@@ -8,20 +8,16 @@ import {
   getPostById,
   ratePost,
   deletePostRating,
+  getUserFavoritePosts,
 } from "../models/Post.js";
 import path from "path";
-import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import s3Client from "../services/s3Client.js";
 import dotenv from "dotenv";
+import { newReport } from "../models/Report.js";
+import { newNotification } from "./notifications-controller.js";
 
 dotenv.config();
-
-const s3Client = new S3Client({
-  region: process.env.AWS_BUCKET_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_PUBLIC_KEY,
-    secretAccessKey: process.env.AWS_SECRET_KEY,
-  },
-});
 
 const newPost = async (req, res) => {
   try {
@@ -62,11 +58,9 @@ const getUserPosts = async (req, res) => {
     const posts = await getPostsByUserId(userId);
     res.status(200).json(posts);
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        error: "Ocurrió un error al obtener las publicaciones del usuario",
-      });
+    res.status(500).json({
+      error: "Ocurrió un error al obtener las publicaciones del usuario",
+    });
   }
 };
 
@@ -101,13 +95,11 @@ const deleteById = async (req, res) => {
     }
 
     post = await deletePostById(postId);
-    res
-      .status(200)
-      .json({
-        message: "Publicación eliminada con éxito",
-        status: "success",
-        post,
-      });
+    res.status(200).json({
+      message: "Publicación eliminada con éxito",
+      status: "success",
+      post,
+    });
   } catch (error) {
     res
       .status(500)
@@ -121,6 +113,16 @@ const like = async (req, res) => {
 
   try {
     const post = await likePost(postId, userId);
+
+    if (userId !== post.author.toString()) {
+      await newNotification({
+        sender: userId,
+        receiver: post.author,
+        type: "like",
+        reference: postId,
+      });
+    }
+
     res
       .status(200)
       .json({ message: "Te gusta esta publicación", status: "success" });
@@ -142,12 +144,10 @@ const unlike = async (req, res) => {
       .status(200)
       .json({ message: "Ya no te gusta esta publicación", status: "success" });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: 'Ocurrió un error al quitar tu "me gusta"',
-        status: "error",
-      });
+    res.status(500).json({
+      message: 'Ocurrió un error al quitar tu "me gusta"',
+      status: "error",
+    });
   }
 };
 
@@ -164,24 +164,31 @@ const getSinglePost = async (req, res) => {
   }
 };
 
-const rate = async (req, res, next) => {
+const rate = async (req, res) => {
   try {
     const { userId, rating } = req.body;
     const postId = req.params.postId;
 
     const post = await ratePost(postId, userId, rating);
 
+    if (userId !== post.author.toString()) {
+      await newNotification({
+        sender: userId,
+        receiver: post.author,
+        type: "rating",
+        reference: postId,
+      });
+    }
+
     res
       .status(200)
       .json({ message: "Valoraste ésta publicación", status: "success" });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .json({
-        message: "Ocurrió un error al valorar la publicación",
-        status: "error",
-      });
+    res.status(500).json({
+      message: "Ocurrió un error al valorar la publicación",
+      status: "error",
+    });
   }
 };
 
@@ -197,12 +204,43 @@ const deleteRating = async (req, res) => {
       .json({ message: "Valoración eliminada con éxito", status: "success" });
   } catch (error) {
     console.log(error);
+    res.status(500).json({
+      message: "Ocurrió un error al eliminar tu valoración",
+      status: "error",
+    });
+  }
+};
+
+const getFavoritePosts = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const posts = await getUserFavoritePosts(userId);
+    res.status(200).json(posts);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Ocurrió un error al obtener las publicaciones favoritas",
+      status: "error",
+    });
+  }
+};
+
+const reportPost = async (req, res) => {
+  try {
+    const { userId, message } = req.body;
+    const postId = req.params.postId;
+
+    const post = await newReport(userId, postId, message);
+
     res
-      .status(500)
-      .json({
-        message: "Ocurrió un error al eliminar tu valoración",
-        status: "error",
-      });
+      .status(200)
+      .json({ message: "Se envió tu comentario", status: "success" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Ocurrió un error al enviar tu comentario",
+      status: "error",
+    });
   }
 };
 
@@ -216,4 +254,6 @@ export {
   getSinglePost,
   rate,
   deleteRating,
+  getFavoritePosts,
+  reportPost,
 };

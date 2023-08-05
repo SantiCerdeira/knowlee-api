@@ -8,6 +8,8 @@ import {
   getUsers,
   generateResetToken,
   setResetToken,
+  changeUserPassword,
+  getUserByResetToken,
 } from "../models/User.js";
 import { sendResetEmail } from "../services/sendResetEmail.js";
 import jwt from "jsonwebtoken";
@@ -65,6 +67,13 @@ const login = async (req, res) => {
 
     const token = jwt.sign({ userId: result._id }, process.env.JWT_SECRET, {
       expiresIn: "1d",
+    });
+
+    res.cookie("token", token, {
+      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
     });
 
     return res.status(200).json({ token });
@@ -142,12 +151,50 @@ const requestPasswordReset = async (req, res) => {
 
     await sendResetEmail(email, resetToken);
 
-    res.status(200).json({ message: 'Se envió el email para el cambio de contraseña.' });
+    res
+      .status(200)
+      .json({ message: "Se envió el email para el cambio de contraseña." });
   } catch (error) {
-    console.error('Error al enviar el correo:', error);
-    res.status(500).json({ error: 'Error al enviar el correo.' });
+    console.error("Error al enviar el correo:", error);
+    res.status(500).json({ error: "Error al enviar el correo." });
   }
 };
+
+const changePassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const { token } = req.params;
+
+    const user = await getUserByResetToken(token);
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "No existe un usuario con ese correo electrónico." });
+    }
+
+    if (user.resetToken !== token) {
+      return res.status(400).json({ message: "El token es inválido." });
+    }
+
+    await changeUserPassword(user._id, password);
+
+    res.status(200).json({ message: "Se cambió la contraseña con éxito." });
+  } catch (error) {
+    console.error("Error al cambiar la contraseña:", error);
+    res.status(500).json({ error: "Error al cambiar la contraseña." });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+      res.clearCookie('token');
+      res.status(200).json({ message: "Sesión cerrada con éxito" })
+  } catch (error) {
+      res.status(500).json({ message: "Error al cerrar la sesión" })
+      console.log(error)
+  }
+}
 
 export {
   isAuthenticated,
@@ -158,4 +205,6 @@ export {
   getAuthenticatedUserById,
   getAllUsers,
   requestPasswordReset,
+  changePassword,
+  logout
 };

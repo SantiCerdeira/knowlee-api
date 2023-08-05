@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import crypto from "crypto";
+import { Post } from "./Post.js";
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -49,7 +50,7 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: new Date(),
     required: true,
-  }, 
+  },
   resetToken: {
     type: String,
     default: null,
@@ -76,6 +77,12 @@ const userSchema = new mongoose.Schema({
     required: false,
   },
   posts: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "posts",
+    },
+  ],
+  favoritePosts: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "posts",
@@ -108,7 +115,7 @@ const generateHashedPassword = async (password) => {
 };
 
 const generateResetToken = () => {
-  const token = crypto.randomBytes(20).toString('hex');
+  const token = crypto.randomBytes(20).toString("hex");
   return token;
 };
 
@@ -185,7 +192,7 @@ const getUsers = async () => {
 };
 
 const findUserByEmailAndPassword = async (email, password) => {
-  const user = await findUserByEmail(email)
+  const user = await findUserByEmail(email);
   if (user) {
     const isMatch = await bcrypt.compare(password, user.password);
     if (isMatch) {
@@ -218,7 +225,7 @@ const updateUserDescription = async (userId, description) => {
     const user = await User.findById(userId).select("-password");
 
     if (!user) {
-      throw new Error("User not found");
+      throw new Error("Usuario no encontrado");
     }
 
     user.description = description;
@@ -308,19 +315,48 @@ const buyUserPremium = async (userId) => {
     await user.save();
     return user;
   } catch (error) {
-    console.log(error)
+    console.log(error);
+    throw new Error("Error al comprar premium");
+  }
+};
+
+const buyUserPremiumOneYear = async (userId) => {
+  try {
+    const user = await findUserById(userId);
+    user.premium = true;
+
+    const currentDate = new Date();
+    const existingDeadline = user.deadline;
+
+    if (existingDeadline && existingDeadline > currentDate) {
+      existingDeadline.setFullYear(existingDeadline.getFullYear() + 1);
+      user.deadline = existingDeadline;
+    } else {
+      const expirationDate = new Date();
+      expirationDate.setFullYear(currentDate.getFullYear() + 1);
+      user.deadline = expirationDate;
+    }
+
+    user.markModified("deadline");
+
+    await user.save();
+    console.log("final" + user.deadline);
+    return user;
+  } catch (error) {
+    console.log(error);
     throw new Error("Error al comprar premium");
   }
 };
 
 const cancelUserPremium = async (userId) => {
   try {
-    const user = await findUserById(userId)
+    const user = await findUserById(userId);
     user.premium = false;
-    user.premiumExpirationDate = null;
+    user.deadline = new Date("1970-01-01");
     await user.save();
     return user;
   } catch (error) {
+    console.log(error);
     throw new Error("Error canceling premium");
   }
 };
@@ -338,7 +374,7 @@ const schedulePremiumExpirationCheck = () => {
       await Promise.all(
         expiredUsers.map(async (user) => {
           user.premium = false;
-          user.premiumExpirationDate = null;
+          user.deadline = new Date("1970-01-01");
           await user.save();
         })
       );
@@ -354,23 +390,42 @@ const setResetToken = async (email, resetToken) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      throw new Error('Usuario no encontrado.');
+      throw new Error("Usuario no encontrado.");
     }
 
     user.resetToken = resetToken;
-    user.resetTokenExpiration = Date.now() + 3600000; 
+    user.resetTokenExpiration = Date.now() + 3600000;
     await user.save();
   } catch (error) {
-    throw new Error('Error guardando el token de reseteo.');
+    throw new Error("Error guardando el token de reseteo.");
+  }
+};
+
+const getUserByResetToken = async (resetToken) => {
+  try {
+    const user = await User.findOne({ resetToken });
+
+    if (!user) {
+      throw new Error("Token inválido.");
+    }
+
+    if (user.resetTokenExpiration && user.resetTokenExpiration < Date.now()) {
+      throw new Error("El token ha expirado.");
+    }
+
+    return user;
+  } catch (error) {
+    console.log(error);
+    throw new Error("Error al buscar el usuario por el token de reseteo.");
   }
 };
 
 const changeUserPassword = async (userId, newPassword) => {
   try {
     const user = await findUserById(userId);
-    
+
     const newPasswordHash = await generateHashedPassword(newPassword);
-    
+
     user.password = newPasswordHash;
     await user.save();
 
@@ -380,7 +435,7 @@ const changeUserPassword = async (userId, newPassword) => {
   }
 };
 
-const setDonationLinks = async (links, userId) => {
+const setDonationLinks = async (userId, links) => {
   try {
     const user = await User.findById(userId).select("-password");
 
@@ -388,17 +443,63 @@ const setDonationLinks = async (links, userId) => {
       throw new Error("Usuario no encontrado");
     }
 
-    user.coffeeLink = links.coffeeLink || user.coffeeLink;
-    user.paypalLink = links.paypalLink || user.paypalLink;
-    user.mercadoPagoLink = links.mercadoPagoLink || user.mercadoPagoLink
+    user.coffeeLink = links.coffeeLink;
+    user.paypalLink = links.paypalLink;
+    user.mercadoPagoLink = links.mercadoPagoLink;
 
-    await user.save()
-    return user
+    await user.save();
+    return user;
   } catch (error) {
-    throw new Error('Error guardando los links');
+    console.log(error);
+    throw new Error("Error guardando los links");
   }
-}
+};
 
+const savePostAsFavorite = async (userId, postId) => {
+  try {
+    const post = await Post.findById(postId);
+    const user = await User.findById(userId).select("-password");
+
+    if (!user) {
+      throw new Error("Usuario no encontrado");
+    }
+
+    if (!post) {
+      throw new Error("Post no encontrado");
+    }
+
+    user.favoritePosts.push(postId);
+
+    await user.save();
+    return user;
+  } catch (error) {
+    console.log(error);
+    throw new Error("Error guardando el post como favorito");
+  }
+};
+
+const removePostFromFavorites = async (userId, postId) => {
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new Error("Usuario no encontrado");
+    }
+
+    const postIndex = user.favoritePosts.indexOf(postId);
+    console.log(user.favoritePosts);
+    if (postIndex === -1) {
+      throw new Error("La publicación no está guardada en favoritos");
+    }
+
+    user.favoritePosts.splice(postIndex, 1);
+    await user.save();
+    return user;
+  } catch (error) {
+    console.error("Error al quitar la publicación de favoritos:", error);
+    throw new Error("Error al quitar la publicación de favoritos");
+  }
+};
 
 export {
   generateHashedPassword,
@@ -417,10 +518,14 @@ export {
   getUserFollowers,
   getUserFollowing,
   buyUserPremium,
+  buyUserPremiumOneYear,
   cancelUserPremium,
   setResetToken,
+  getUserByResetToken,
   changeUserPassword,
   setDonationLinks,
   schedulePremiumExpirationCheck,
+  savePostAsFavorite,
+  removePostFromFavorites,
   User,
 };

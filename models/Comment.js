@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Post } from "./Post.js";
+import { GroupPost } from "./GroupPost.js";
 
 const commentSchema = new mongoose.Schema({
   author: {
@@ -25,8 +27,27 @@ const Comment = mongoose.model("comments", commentSchema);
 
 const createComment = async (commentData) => {
   const { author, post, content, date } = commentData;
-  const comment = new Comment({ author, post, content, date });
-  return comment.save();
+
+  try {
+    const postWithData = await Post.findOne({ _id: post });
+    if (postWithData) {
+      const comment = new Comment({ author, post, content, date });
+      await comment.save();
+      return { comment, postWithData };
+    }
+
+    const groupPostWithData = await GroupPost.findOne({ _id: post });
+    if (groupPostWithData) {
+      const comment = new Comment({ author, post, content, date });
+      await comment.save();
+      return { comment, postWithData: groupPostWithData };
+    }
+
+    throw new Error("No se encontró el posteo");
+  } catch (error) {
+    console.error("Error creando comentario:", error);
+    throw error;
+  }
 };
 
 const getPostComments = async (postId) => {

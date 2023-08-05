@@ -8,7 +8,7 @@ import sharp from "sharp";
 dotenv.config();
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage }).single("profileImage");
+const upload = multer({ storage }).single("groupImage");
 
 const fileSizeLimit = 1 * 1024 * 1024;
 const allowedMimeTypes = [
@@ -19,7 +19,7 @@ const allowedMimeTypes = [
   "image/avif",
 ];
 
-const imgUpload = async (req, res, next) => {
+const groupImgUpload = async (req, res, next) => {
   try {
     if (!req.file) {
       return next();
@@ -40,7 +40,7 @@ const imgUpload = async (req, res, next) => {
     }
 
     const optimizedBuffer = await sharp(req.file.buffer)
-      .resize(800)
+      .resize(1200)
       .jpeg({ quality: 75 })
       .toBuffer();
 
@@ -50,10 +50,10 @@ const imgUpload = async (req, res, next) => {
 
     const s3Key = `${randomName}-${originalname}`;
 
-    if (req.body.userImage) {
-      const key = path.basename(req.body.userImage);
+    if (req.body.previousImage) {
+      const key = path.basename(req.body.previousImage);
 
-      if (key !== "default-user-image.png") {
+      if (key !== "4abvz-logo-fondo-azul.jpg") {
         const deleteParams = {
           Bucket: process.env.AWS_BUCKET_NAME,
           Key: key,
@@ -80,12 +80,12 @@ const imgUpload = async (req, res, next) => {
     const objectUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_BUCKET_REGION}.amazonaws.com/${encodedS3Key}`;
 
     req.savedFileName = objectUrl;
-    console.log("Imagen subida correctamente", s3Key);
+    console.log("Imagen subida", s3Key);
     next();
   } catch (err) {
-    console.error("Error al subir la imagen:", err);
-    res.status(500).json({ error: "Error al subir la imagen" });
+    console.error("Error subiendo la imagen:", err);
+    res.status(500).json({ error: "Failed to upload file" });
   }
 };
 
-export { upload, imgUpload };
+export { upload, groupImgUpload };

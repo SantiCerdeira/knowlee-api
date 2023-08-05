@@ -11,6 +11,9 @@ router.get('/:userId/followers', isAuthenticated,  usersController.getFollowerUs
 router.get('/:userId/following', isAuthenticated,  usersController.getFollowingUserIds)
 router.patch('/premium', isAuthenticated,  usersController.buyPremium)
 router.patch('/cancel-premium', isAuthenticated,  usersController.cancelPremium)
-router.patch('/links', isAuthenticated,  usersController.setLinks)
+router.patch('/:userId/links', isAuthenticated,  usersController.setLinks)
+router.patch('/redeem-code', isAuthenticated,  usersController.redeemCodeForOneYear)
+router.patch('/post/:postId/favorite', isAuthenticated,  usersController.saveAsFavorite)
+router.patch('/post/:postId/delete-favorite', isAuthenticated,  usersController.removeFromFavorite)
 
 export default router;

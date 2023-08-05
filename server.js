@@ -6,19 +6,23 @@ import uploadsRouter from "./routes/uploads.routes.js";
 import commentsRouter from "./routes/comments.routes.js";
 import usersRouter from "./routes/users.routes.js";
 import chatRouter from "./routes/chat.routes.js";
+import groupsRouter from "./routes/groups.routes.js";
+import groupsPostsRouter from "./routes/group-posts.routes.js";
+import notificationsRouter from "./routes/notifications.routes.js";
+import groupNotificationsRouter from "./routes/groups-notifications.routes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import http from "http";
-import { Server } from 'socket.io';
+import { Server } from "socket.io";
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: ['https://knowlee-fw4c.onrender.com'],
-  }
+  },
 });
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,7 +30,6 @@ const __dirname = dirname(__filename);
 
 app.use(
   cors({
-    // origin: true,
     origin: ['https://knowlee-fw4c.onrender.com'],
     credentials: true,
   })
@@ -45,21 +48,25 @@ app.use("/", uploadsRouter);
 app.use("/", commentsRouter);
 app.use("/", usersRouter);
 app.use("/", chatRouter);
+app.use("/", groupsRouter);
+app.use("/", groupsPostsRouter);
+app.use("/", notificationsRouter);
+app.use("/", groupNotificationsRouter);
 
 app.get("*", (req, res) => {
   res.redirect("https://knowlee-fw4c.onrender.com");
 });
 
-
 server.listen(4321, () => {
   // SOCKET.IO
-  io.on('connection', (socket) => {
-    socket.on('message', (message) => {
-      io.emit('message', message);
+  io.on("connection", (socket) => {
+    socket.on("message", (message) => {
+      io.emit("message", message);
     });
 
-    socket.on('disconnect', () => {
-      console.log('user disconnected');
+    socket.on("disconnect", () => {
+      console.log("user disconnected");
     });
   });
 });
+

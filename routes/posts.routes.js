@@ -10,12 +10,14 @@ const router = express.Router();
 router.get('/posts', isAuthenticated, postsController.getAllPosts)
 router.post('/posts', isAuthenticated, fileUpload, addWatermark, pdfUpload, postsController.newPost)
 router.get('/posts/:userId', isAuthenticated, postsController.getUserPosts)
+router.get('/posts/:userId/favorite', isAuthenticated, postsController.getFavoritePosts)
 router.get('/post/:postId', isAuthenticated, postsController.getSinglePost)
 router.delete('/posts/:postId', isAuthenticated, postsController.deleteById)
 router.patch('/posts/:postId/like', isAuthenticated, postsController.like);
 router.delete('/posts/:postId/unlike', isAuthenticated, postsController.unlike);
 router.patch('/posts/:postId/rate', isAuthenticated, postsController.rate);
 router.delete('/posts/:postId/rate', isAuthenticated, postsController.deleteRating);
+router.post('/posts/:postId/report', isAuthenticated, postsController.reportPost);
 
 
 export default router;

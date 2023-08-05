@@ -1,8 +1,12 @@
 import mongoose from "mongoose";
 import { Comment } from "./Comment.js";
-import { User } from "./User.js";
 
-const postSchema = new mongoose.Schema({
+const groupPostSchema = new mongoose.Schema({
+  group: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "groups",
+    required: true,
+  },
   title: {
     type: String,
     required: true,
@@ -66,12 +70,22 @@ const postSchema = new mongoose.Schema({
   ],
 });
 
-const Post = mongoose.model("posts", postSchema);
+const GroupPost = mongoose.model("group-posts", groupPostSchema);
 
-const createPost = async (postData) => {
-  const { title, content, author, date, fileName, name, lastName, premium } =
-    postData;
-  const post = new Post({
+const createGroupPost = async (postData) => {
+  const {
+    group,
+    title,
+    content,
+    author,
+    date,
+    fileName,
+    name,
+    lastName,
+    premium,
+  } = postData;
+  const post = new GroupPost({
+    group,
     title,
     content,
     author,
@@ -84,9 +98,9 @@ const createPost = async (postData) => {
   return post.save();
 };
 
-const getPostsByUserId = async (userId) => {
+const getGroupPostsByUserId = async (userId) => {
   try {
-    const posts = await Post.find({ author: userId }).sort({ date: -1 });
+    const posts = await GroupPost.find({ author: userId }).sort({ date: -1 });
 
     return posts;
   } catch (error) {
@@ -94,39 +108,29 @@ const getPostsByUserId = async (userId) => {
   }
 };
 
-const getPosts = async () => {
+const getGroupPosts = async (groupId) => {
   try {
-    const posts = await Post.find().sort({ date: -1 });
+    const posts = await GroupPost.find({ group: groupId }).sort({ date: -1 });
     return posts;
   } catch (error) {
     throw new Error(error);
   }
 };
 
-const deletePostById = async (postId) => {
+const deleteGroupPostById = async (postId) => {
   try {
     const comments = await Comment.find({ post: postId });
     await Comment.deleteMany({ post: postId });
-
-    const usersWithFavorite = await User.find({ favoritePosts: postId });
-    for (const user of usersWithFavorite) {
-      user.favoritePosts = user.favoritePosts.filter(
-        (postIdInFavorites) =>
-          postIdInFavorites.toString() !== postId.toString()
-      );
-      await user.save();
-    }
-
-    const post = await Post.findByIdAndDelete(postId);
+    const post = await GroupPost.findByIdAndDelete(postId);
     return post;
   } catch (error) {
     throw new Error(error);
   }
 };
 
-const likePost = async (postId, userId) => {
+const likeGroupPost = async (postId, userId) => {
   try {
-    const post = await Post.findByIdAndUpdate(
+    const post = await GroupPost.findByIdAndUpdate(
       postId,
       { $addToSet: { likes: { userId: userId } } },
       { new: true }
@@ -137,9 +141,9 @@ const likePost = async (postId, userId) => {
   }
 };
 
-const unlikePost = async (postId, userId) => {
+const unlikeGroupPost = async (postId, userId) => {
   try {
-    const post = await Post.findByIdAndUpdate(
+    const post = await GroupPost.findByIdAndUpdate(
       postId,
       { $pull: { likes: { userId: userId } } },
       { new: true }
@@ -150,18 +154,18 @@ const unlikePost = async (postId, userId) => {
   }
 };
 
-const getPostById = async (id) => {
+const getGroupPostById = async (id) => {
   try {
-    const post = await Post.findOne({ _id: id }).populate("author");
+    const post = await GroupPost.findOne({ _id: id }).populate("author");
     return post;
   } catch (error) {
     throw new Error(error);
   }
 };
 
-const ratePost = async (postId, userId, rating) => {
+const rateGroupPost = async (postId, userId, rating) => {
   try {
-    const post = await Post.findById(postId);
+    const post = await GroupPost.findById(postId);
 
     const existingRating = post.ratings.find(
       (r) => r.userId.toString() === userId.toString()
@@ -183,9 +187,9 @@ const ratePost = async (postId, userId, rating) => {
   }
 };
 
-const deletePostRating = async (postId, userId) => {
+const deleteGroupPostRating = async (postId, userId) => {
   try {
-    const post = await Post.findById(postId);
+    const post = await GroupPost.findById(postId);
 
     const ratingIndex = post.ratings.findIndex(
       (r) => r.userId.toString() === userId.toString()
@@ -202,30 +206,15 @@ const deletePostRating = async (postId, userId) => {
   }
 };
 
-const getUserFavoritePosts = async (userId) => {
-  try {
-    const user = await User.findById(userId).populate({
-      path: "favoritePosts",
-      options: {
-        sort: { date: -1 },
-      },
-    });
-    return user.favoritePosts;
-  } catch (error) {
-    throw new Error(error);
-  }
-};
-
 export {
-  createPost,
-  getPostsByUserId,
-  getPosts,
-  deletePostById,
-  likePost,
-  unlikePost,
-  getPostById,
-  ratePost,
-  deletePostRating,
-  getUserFavoritePosts,
-  Post,
+  createGroupPost,
+  getGroupPostsByUserId,
+  getGroupPosts,
+  deleteGroupPostById,
+  likeGroupPost,
+  unlikeGroupPost,
+  getGroupPostById,
+  rateGroupPost,
+  deleteGroupPostRating,
+  GroupPost,
 };
