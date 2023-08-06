@@ -13,6 +13,6 @@ router.get('/users', isAuthenticated,  authController.getAllUsers)
 router.get('/users/authenticated/:id', isAuthenticated,  authController.getAuthenticatedUserById)
 router.get('/restablecer-contrasena/:email', authController.requestPasswordReset)
 router.patch('/cambiar-contrasena/:token', authController.changePassword)
-router.post('/logout', authController.logout)
+router.post('/logout', isAuthenticated, authController.logout)
 
 export default router;
