@@ -69,6 +69,8 @@ const login = async (req, res) => {
       expiresIn: "1d",
     });
 
+    console.log(token)
+
     res.cookie("token", token, {
       maxAge: 24 * 60 * 60 * 1000,
       httpOnly: true,
@@ -188,6 +190,8 @@ const changePassword = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
+      console.log('logged out')
+
       res.clearCookie('token');
       res.status(200).json({ message: "Sesión cerrada con éxito" })
   } catch (error) {
