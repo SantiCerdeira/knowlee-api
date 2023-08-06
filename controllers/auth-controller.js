@@ -76,6 +76,7 @@ const login = async (req, res) => {
       httpOnly: true,
       sameSite: "None",
       secure: true,
+      domain: ".knowlee-fw4c.onrender.com",
     });
 
     return res.status(200).json({ token });
