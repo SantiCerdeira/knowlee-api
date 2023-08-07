@@ -76,7 +76,7 @@ const login = async (req, res) => {
       httpOnly: true,
       sameSite: "none",
       secure: true,
-      domain: '.onrender.com',
+      // domain: '.onrender.com',
     });
 
     return res.status(200).json({ token });
