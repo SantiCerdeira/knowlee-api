@@ -74,7 +74,7 @@ const login = async (req, res) => {
     res.cookie("token", token, {
       maxAge: 24 * 60 * 60 * 1000,
       httpOnly: true,
-      sameSite: "None",
+      sameSite: "none",
       secure: true,
     });
 
@@ -190,15 +190,19 @@ const changePassword = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-      console.log('logged out')
+    console.log('logging out');
 
-      res.clearCookie('token');
-      res.status(200).json({ message: "Sesión cerrada con éxito" })
+    res.clearCookie('token');
+
+    await new Promise((resolve) => res.on('finish', resolve));
+
+    res.status(200).json({ message: "Sesión cerrada con éxito" });
   } catch (error) {
-      res.status(500).json({ message: "Error al cerrar la sesión" })
-      console.log(error)
+    res.status(500).json({ message: "Error al cerrar la sesión" });
+    console.log(error);
   }
-}
+};
+
 
 export {
   isAuthenticated,
