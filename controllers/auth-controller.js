@@ -190,11 +190,15 @@ const changePassword = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    console.log('logging out');
+    console.log('Start logging out'); // Add a log at the beginning
 
     res.clearCookie('token');
 
-    await new Promise((resolve) => res.on('finish', resolve));
+    console.log('Cookie cleared'); // Add a log after clearing the cookie
+
+    await new Promise((resolve) => res.on('close', resolve));
+
+    console.log('Response sent'); // Add a log after the response is sent
 
     res.status(200).json({ message: "Sesión cerrada con éxito" });
   } catch (error) {
