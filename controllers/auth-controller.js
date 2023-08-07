@@ -190,15 +190,24 @@ const changePassword = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    console.log('Start logging out'); // Add a log at the beginning
+    console.log('Start logging out');
 
-    res.clearCookie('token');
+    // Set the same options used when setting the cookie during login
+    const cookieOptions = {
+      maxAge: 0,
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+    };
 
-    console.log('Cookie cleared'); // Add a log after clearing the cookie
+    // Clear the 'token' cookie with the specified options
+    res.clearCookie('token', cookieOptions);
 
-    await new Promise((resolve) => res.on('close', resolve));
+    console.log('Cookie cleared');
 
-    console.log('Response sent'); // Add a log after the response is sent
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    console.log('Response sent');
 
     res.status(200).json({ message: "Sesión cerrada con éxito" });
   } catch (error) {
