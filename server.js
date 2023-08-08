@@ -43,6 +43,7 @@ app.use(
   "/uploads",
   express.static(join(__dirname, "../client/public/uploads"))
 );
+app.use(express.static(path.join(__dirname, 'build')));
 
 app.use("/", authRouter);
 app.use("/", postsRouter);
@@ -60,7 +61,7 @@ app.use("/", groupNotificationsRouter);
 //   res.sendFile(path.join(__dirname, '../client/public', 'index.html'));
 // });
 app.get('*', (req, res) => {
-  res.status(404).json({ error: 'Resource not found' });
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
 server.listen(4321, () => {
