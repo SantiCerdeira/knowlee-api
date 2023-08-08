@@ -22,6 +22,8 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: ['https://knowlee-fw4c.onrender.com'],
+    credentials: true,
+    
   },
 });
 
@@ -54,7 +56,8 @@ app.use("/", notificationsRouter);
 app.use("/", groupNotificationsRouter);
 
 app.get("*", (req, res) => {
-  res.redirect("https://knowlee-fw4c.onrender.com");
+  // res.redirect("https://knowlee-fw4c.onrender.com");
+  res.sendFile(path.join(__dirname, '../client/public', 'index.html'));
 });
 
 server.listen(4321, () => {
