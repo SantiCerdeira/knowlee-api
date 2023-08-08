@@ -16,6 +16,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import http from "http";
 import { Server } from "socket.io";
+import path from "path";
 
 const app = express();
 const server = http.createServer(app);
