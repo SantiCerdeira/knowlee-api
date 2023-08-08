@@ -44,7 +44,7 @@ app.use(
   "/uploads",
   express.static(join(__dirname, "../client/public/uploads"))
 );
-app.use(express.static(path.join(__dirname, 'knowlee-client', 'public')));
+app.use(express.static(path.join(__dirname, '../knowlee-client/build')));
 
 app.use("/", authRouter);
 app.use("/", postsRouter);
@@ -58,7 +58,7 @@ app.use("/", notificationsRouter);
 app.use("/", groupNotificationsRouter);
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'knowlee-client', 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, '../knowlee-client/build', 'index.html'));
 });
 
 server.listen(4321, () => {
