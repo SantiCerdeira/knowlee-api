@@ -44,7 +44,7 @@ app.use(
   "/uploads",
   express.static(join(__dirname, "../client/public/uploads"))
 );
-app.use(express.static(path.join(__dirname, 'build')));
+app.use(express.static(path.join(__dirname, 'knowlee-client', 'public')));
 
 app.use("/", authRouter);
 app.use("/", postsRouter);
@@ -57,12 +57,8 @@ app.use("/", groupsPostsRouter);
 app.use("/", notificationsRouter);
 app.use("/", groupNotificationsRouter);
 
-// app.get("*", (req, res) => {
-//   // res.redirect("https://knowlee-fw4c.onrender.com");
-//   res.sendFile(path.join(__dirname, '../client/public', 'index.html'));
-// });
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  res.sendFile(path.join(__dirname, 'knowlee-client', 'public', 'index.html'));
 });
 
 server.listen(4321, () => {
