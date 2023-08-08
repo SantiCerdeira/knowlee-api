@@ -55,9 +55,12 @@ app.use("/", groupsPostsRouter);
 app.use("/", notificationsRouter);
 app.use("/", groupNotificationsRouter);
 
-app.get("*", (req, res) => {
-  // res.redirect("https://knowlee-fw4c.onrender.com");
-  res.sendFile(path.join(__dirname, '../client/public', 'index.html'));
+// app.get("*", (req, res) => {
+//   // res.redirect("https://knowlee-fw4c.onrender.com");
+//   res.sendFile(path.join(__dirname, '../client/public', 'index.html'));
+// });
+app.get('*', (req, res) => {
+  res.status(404).json({ error: 'Resource not found' });
 });
 
 server.listen(4321, () => {
