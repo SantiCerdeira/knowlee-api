@@ -17,6 +17,7 @@ import { dirname, join } from "path";
 import http from "http";
 import { Server } from "socket.io";
 import path from "path";
+import { createProxyMiddleware } from "http-proxy-middleware";
 
 const app = express();
 const server = http.createServer(app);
@@ -40,11 +41,6 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  "/uploads",
-  express.static(join(__dirname, "../client/public/uploads"))
-);
-app.use(express.static(path.join(__dirname, '../knowlee-client/build')));
 
 app.use("/", authRouter);
 app.use("/", postsRouter);
@@ -57,9 +53,10 @@ app.use("/", groupsPostsRouter);
 app.use("/", notificationsRouter);
 app.use("/", groupNotificationsRouter);
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../knowlee-client/build', 'index.html'));
-});
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../knowlee-client/build', 'index.html'));
+// });
+app.use('/', createProxyMiddleware({ target: 'https://knowlee-fw4c.onrender.com', changeOrigin: true }));
 
 server.listen(4321, () => {
   // SOCKET.IO
