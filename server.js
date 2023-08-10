@@ -17,7 +17,6 @@ import { dirname, join } from "path";
 import http from "http";
 import { Server } from "socket.io";
 import path from "path";
-import httpProxy from 'http-proxy';
 
 const app = express();
 const server = http.createServer(app);
@@ -55,10 +54,10 @@ app.use("/", groupsPostsRouter);
 app.use("/", notificationsRouter);
 app.use("/", groupNotificationsRouter);
 
-app.get('/cambiar-contraseña/:token', (req, res) => {
-  console.log(req)
-  proxy.web(req, res, { target: 'https://knowlee-fw4c.onrender.com' });
-});
+// app.get('/cambiar-contraseña/:token', (req, res) => {
+//   console.log(req)
+//   proxy.web(req, res, { target: 'https://knowlee-fw4c.onrender.com' });
+// });
 
 server.listen(4321, () => {
   // SOCKET.IO
