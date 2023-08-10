@@ -56,6 +56,7 @@ app.use("/", notificationsRouter);
 app.use("/", groupNotificationsRouter);
 
 app.get('/cambiar-contraseña/:token', (req, res) => {
+  console.log(req)
   proxy.web(req, res, { target: 'https://knowlee-fw4c.onrender.com' });
 });
 
