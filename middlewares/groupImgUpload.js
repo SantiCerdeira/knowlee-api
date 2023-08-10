@@ -40,8 +40,7 @@ const groupImgUpload = async (req, res, next) => {
     }
 
     const optimizedBuffer = await sharp(req.file.buffer)
-      .resize(1200)
-      .jpeg({ quality: 75 })
+      .jpeg({ quality: 100 })
       .toBuffer();
 
     const { originalname } = req.file;
