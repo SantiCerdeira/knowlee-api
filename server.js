@@ -17,13 +17,14 @@ import { dirname, join } from "path";
 import http from "http";
 import { Server } from "socket.io";
 import path from "path";
+import httpProxy from 'http-proxy';
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    // origin: ['https://knowlee-fw4c.onrender.com'],
-    origin: true,
+    origin: ['https://knowlee-fw4c.onrender.com'],
+    // origin: true,
     credentials: true,
     
   },
@@ -34,8 +35,8 @@ const __dirname = dirname(__filename);
 
 app.use(
   cors({
-    // origin: ['https://knowlee-fw4c.onrender.com'],
-    origin: true,
+    origin: ['https://knowlee-fw4c.onrender.com'],
+    // origin: true,
     credentials: true,
   })
 );
@@ -54,14 +55,8 @@ app.use("/", groupsPostsRouter);
 app.use("/", notificationsRouter);
 app.use("/", groupNotificationsRouter);
 
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../knowlee-client/build', 'index.html'));
-// });
-app.use(express.static(path.join(__dirname, '../knowlee-client/build')));
-
-// Serve the main 'index.html' file for all non-API routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../knowlee-client/build', 'index.html'));
+app.get('/cambiar-contraseña/:token', (req, res) => {
+  proxy.web(req, res, { target: 'https://knowlee-fw4c.onrender.com' });
 });
 
 server.listen(4321, () => {
