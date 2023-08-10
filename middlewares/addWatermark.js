@@ -27,7 +27,7 @@ const addWatermark = async (req, res, next) => {
 
     const pdfBuffer = req.file.buffer;
 
-    const pdfDoc = await PDFDocument.load(pdfBuffer);
+    const pdfDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
     const watermarkText = `@${req.body.userName}`;
